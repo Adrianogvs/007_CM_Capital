@@ -1,33 +1,39 @@
+# controllers/pdf_controller.py
 import os
-import re
 from models.pdf_model import PDFModel
-from views.pdf_view import PDFView
+import csv
+from config import fields  # Importe fields de config
 
 class PDFController:
     def __init__(self, pdf_dir, pdf_password):
-        self.pdf_dir = pdf_dir
-        self.pdf_password = pdf_password
-        self.model = PDFModel()
-        self.view = PDFView()
+        self.pdf_model = PDFModel(pdf_dir, pdf_password)
 
-    def process_pdfs(self):
+    def extract_data(self):
         all_data = []
-
-        # Lista todos os arquivos no diretório PDF
-        for file_name in os.listdir(self.pdf_dir):
-            if re.match(r'report(\s\(\d+\))?\.pdf$', file_name):
-                file_path = os.path.join(self.pdf_dir, file_name)
-                data = self.model.process_pdf(file_path, self.pdf_password)
+        for i in range(10):  # Suponha que temos 10 arquivos numerados
+            if i == 0:
+                file_name = 'report.pdf'
+            else:
+                file_name = f'report ({i}).pdf'
+            
+            file_path = os.path.join(self.pdf_model.pdf_dir, file_name)
+            
+            if os.path.exists(file_path):
+                data = self.pdf_model.process_pdf(file_path)
                 all_data.extend(data)
             else:
-                self.view.display_message(f"O arquivo '{file_name}' não corresponde ao padrão esperado.")
+                print(f"O arquivo '{file_path}' não foi encontrado.")
 
-        # Cria a pasta 'data' se não existir
-        output_dir = 'data'
+        return all_data
+
+    def save_to_csv(self, data, output_csv):
+        output_dir = os.path.dirname(output_csv)
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
-        # Escreve os dados em um arquivo CSV
-        output_csv = os.path.join(output_dir, 'output.csv')
-        self.model.save_to_csv(output_csv, all_data)
-        self.view.display_message(f"Dados extraídos e salvos em '{output_csv}'")
+        with open(output_csv, mode='w', newline='', encoding='utf-8') as csv_file:
+            writer = csv.DictWriter(csv_file, fieldnames=["Data (Pregão)", "Nota"] + fields)
+            writer.writeheader()
+            writer.writerows(data)
+
+        print(f"Dados extraídos e salvos em '{output_csv}'")

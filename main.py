@@ -1,17 +1,19 @@
-from controllers.pdf_controller import PDFController
+# main.py
 import os
 from dotenv import load_dotenv
+from controllers.pdf_controller import PDFController
 
 # Carrega as variáveis do arquivo .env
 load_dotenv()
 
-def main():
-    # Recupera o caminho e a senha do arquivo .env
-    pdf_dir = os.getenv('PDF_DIR')
-    pdf_password = os.getenv('PDF_PASSWORD')
-    
-    controller = PDFController(pdf_dir, pdf_password)
-    controller.process_pdfs()
+# Recupera o caminho e a senha do arquivo .env
+pdf_dir = os.getenv('PDF_DIR')
+pdf_password = os.getenv('PDF_PASSWORD')
 
-if __name__ == "__main__":
-    main()
+# Instancia o controlador e extrai os dados
+controller = PDFController(pdf_dir, pdf_password)
+data = controller.extract_data()
+
+# Salva os dados em um arquivo CSV
+output_csv = 'data/output.csv'
+controller.save_to_csv(data, output_csv)
